@@ -34,6 +34,7 @@ var _ = Describe("Nfs Driver", func() {
 	var fakeMounter *nfsdriverfakes.FakeMounter
 	var fakeExec *exec_fake.FakeExec
 	var fakeCmd *exec_fake.FakeCmd
+	var fakeKerberizer *nfsdriverfakes.FakeKerberizer
 	var nfsDriver *nfsdriver.NfsDriver
 	var mountDir string
 	const volumeName = "test-volume-id"
@@ -52,6 +53,7 @@ var _ = Describe("Nfs Driver", func() {
 		fakeExec = &exec_fake.FakeExec{}
 		fakeCmd = &exec_fake.FakeCmd{}
 		fakeExec.CommandContextReturns(fakeCmd)
+		fakeKerberizer = &nfsdriverfakes.FakeKerberizer{}
 	})
 
 	Context("when mountpoint verfication hangs", func() {
@@ -64,7 +66,7 @@ var _ = Describe("Nfs Driver", func() {
 				"\"Mountpoint\":\"/tmp/volumes/4d635e24-1e3e-47a6-8d34-515c1b2419a4\","+
 				"\"MountCount\":1"+
 				"}}"), nil)
-			nfsDriver = nfsdriver.NewNfsDriver(logger, fakeOs, fakeFilepath, fakeIoutil, fakeExec, mountDir, fakeMounter)
+			nfsDriver = nfsdriver.NewNfsDriver(logger, fakeOs, fakeFilepath, fakeIoutil, fakeExec, mountDir, fakeMounter, fakeKerberizer)
 			ctx, _, _ := fakeExec.CommandContextArgsForCall(0)
 			Expect(fmt.Sprintf("%#v", ctx)).To(ContainSubstring("timerCtx"))
 		})
@@ -72,7 +74,11 @@ var _ = Describe("Nfs Driver", func() {
 
 	Context("created", func() {
 		BeforeEach(func() {
-			nfsDriver = nfsdriver.NewNfsDriver(logger, fakeOs, fakeFilepath, fakeIoutil, fakeExec, mountDir, fakeMounter)
+			nfsDriver = nfsdriver.NewNfsDriver(logger, fakeOs, fakeFilepath, fakeIoutil, fakeExec, mountDir, fakeMounter, fakeKerberizer)
+		})
+
+		It("logs in to kerberos successfully", func() {
+			Expect(fakeKerberizer.LoginCallCount()).To(Equal(1))
 		})
 
 		Describe("#Activate", func() {
@@ -532,7 +538,7 @@ var _ = Describe("Nfs Driver", func() {
 
 		Describe("Restoring Internal State", func() {
 			JustBeforeEach(func() {
-				nfsDriver = nfsdriver.NewNfsDriver(logger, fakeOs, fakeFilepath, fakeIoutil, fakeExec, mountDir, fakeMounter)
+				nfsDriver = nfsdriver.NewNfsDriver(logger, fakeOs, fakeFilepath, fakeIoutil, fakeExec, mountDir, fakeMounter, fakeKerberizer)
 			})
 
 			Context("no state is persisted", func() {

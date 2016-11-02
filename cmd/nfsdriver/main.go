@@ -89,6 +89,18 @@ var clientKeyFile = flag.String(
 	"the private key file to use with client ssl authentication",
 )
 
+var principal = flag.String(
+	"kerberosPrincipal",
+	"",
+	"the principal belonging to the Cloud Foundry service account",
+)
+
+var credential = flag.String(
+	"kerberosCredential",
+	"",
+	"the secret belonging to the Cloud Foundry service account",
+)
+
 var insecureSkipVerify = flag.Bool(
 	"insecureSkipVerify",
 	false,
@@ -104,6 +116,8 @@ func main() {
 	logger.Info("start")
 	defer logger.Info("end")
 
+	kerberizer := nfsdriver.NewKerberizer(*principal, *credential)
+
 	client := nfsdriver.NewNfsDriver(
 		logger,
 		&osshim.OsShim{},
@@ -112,6 +126,7 @@ func main() {
 		&execshim.ExecShim{},
 		*mountDir,
 		nfsdriver.NewNfsMounter(&execshim.ExecShim{}),
+		kerberizer,
 	)
 
 	if *transport == "tcp" {

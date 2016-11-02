@@ -41,6 +41,7 @@ type NfsDriver struct {
 	ioutil        ioutilshim.Ioutil
 	mountPathRoot string
 	mounter       Mounter
+	kerberizer    Kerberizer
 }
 
 //go:generate counterfeiter -o nfsdriverfakes/fake_mounter.go . Mounter
@@ -49,7 +50,7 @@ type Mounter interface {
 	Unmount(target string, flags int) (err error)
 }
 
-func NewNfsDriver(logger lager.Logger, os osshim.Os, filepath filepathshim.Filepath, ioutil ioutilshim.Ioutil, exec execshim.Exec, mountPathRoot string, mounter Mounter) *NfsDriver {
+func NewNfsDriver(logger lager.Logger, os osshim.Os, filepath filepathshim.Filepath, ioutil ioutilshim.Ioutil, exec execshim.Exec, mountPathRoot string, mounter Mounter, kerberizer Kerberizer) *NfsDriver {
 	d := &NfsDriver{
 		volumes:       map[string]*NfsVolumeInfo{},
 		os:            os,
@@ -58,6 +59,7 @@ func NewNfsDriver(logger lager.Logger, os osshim.Os, filepath filepathshim.Filep
 		mountPathRoot: mountPathRoot,
 		mounter:       mounter,
 		exec:          exec,
+		kerberizer:    kerberizer,
 	}
 
 	ctx := context.TODO()
@@ -65,6 +67,7 @@ func NewNfsDriver(logger lager.Logger, os osshim.Os, filepath filepathshim.Filep
 
 	d.restoreState(env)
 	d.checkMounts(env)
+	_ = d.kerberizer.Login()
 
 	return d
 }
@@ -397,6 +400,8 @@ func (d *NfsDriver) mount(env voldriver.Env, ip, mountPath string) error {
 		logger.Error("create-mountdir-failed", err)
 		return err
 	}
+
+	// kerberos
 
 	// TODO--permissions & flags?
 	output, err := d.mounter.Mount(ip+":/", mountPath, "nfs4", 0, mountOptions)
