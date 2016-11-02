@@ -116,14 +116,16 @@ func main() {
 	logger.Info("start")
 	defer logger.Info("end")
 
-	kerberizer := nfsdriver.NewKerberizer(*principal, *credential)
+	exec := &execshim.ExecShim{}
+
+	kerberizer := nfsdriver.NewKerberizer(*principal, *credential, exec)
 
 	client := nfsdriver.NewNfsDriver(
 		logger,
 		&osshim.OsShim{},
 		&filepathshim.FilepathShim{},
 		&ioutilshim.IoutilShim{},
-		&execshim.ExecShim{},
+		exec,
 		*mountDir,
 		nfsdriver.NewNfsMounter(&execshim.ExecShim{}),
 		kerberizer,

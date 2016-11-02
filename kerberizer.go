@@ -1,6 +1,9 @@
 package nfsdriver
 
-import "code.cloudfoundry.org/lager"
+import (
+	"code.cloudfoundry.org/goshims/execshim"
+	"code.cloudfoundry.org/lager"
+)
 
 //go:generate counterfeiter -o nfsdriverfakes/fake_kerberizer.go . Kerberizer
 type Kerberizer interface {
@@ -9,12 +12,15 @@ type Kerberizer interface {
 
 type kerberizer struct {
 	principal, credential string
+
+	exec execshim.Exec
 }
 
-func NewKerberizer(principal, credential string) Kerberizer {
-	return &kerberizer{principal: principal, credential: credential}
+func NewKerberizer(principal, credential string, exec execshim.Exec) Kerberizer {
+	return &kerberizer{principal: principal, credential: credential, exec: exec}
 }
 
-func (*kerberizer) Login(_ lager.Logger) error {
-	return nil
+func (k *kerberizer) Login(_ lager.Logger) error {
+	cmd := k.exec.Command("kinit", "-k", "-t", k.credential, k.principal)
+	return cmd.Run()
 }
