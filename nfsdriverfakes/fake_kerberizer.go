@@ -4,27 +4,32 @@ package nfsdriverfakes
 import (
 	"sync"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/lds-cf/nfsdriver"
 )
 
 type FakeKerberizer struct {
-	LoginStub        func() error
+	LoginStub        func(lager.Logger) error
 	loginMutex       sync.RWMutex
-	loginArgsForCall []struct{}
-	loginReturns     struct {
+	loginArgsForCall []struct {
+		arg1 lager.Logger
+	}
+	loginReturns struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeKerberizer) Login() error {
+func (fake *FakeKerberizer) Login(arg1 lager.Logger) error {
 	fake.loginMutex.Lock()
-	fake.loginArgsForCall = append(fake.loginArgsForCall, struct{}{})
-	fake.recordInvocation("Login", []interface{}{})
+	fake.loginArgsForCall = append(fake.loginArgsForCall, struct {
+		arg1 lager.Logger
+	}{arg1})
+	fake.recordInvocation("Login", []interface{}{arg1})
 	fake.loginMutex.Unlock()
 	if fake.LoginStub != nil {
-		return fake.LoginStub()
+		return fake.LoginStub(arg1)
 	} else {
 		return fake.loginReturns.result1
 	}
@@ -34,6 +39,12 @@ func (fake *FakeKerberizer) LoginCallCount() int {
 	fake.loginMutex.RLock()
 	defer fake.loginMutex.RUnlock()
 	return len(fake.loginArgsForCall)
+}
+
+func (fake *FakeKerberizer) LoginArgsForCall(i int) lager.Logger {
+	fake.loginMutex.RLock()
+	defer fake.loginMutex.RUnlock()
+	return fake.loginArgsForCall[i].arg1
 }
 
 func (fake *FakeKerberizer) LoginReturns(result1 error) {

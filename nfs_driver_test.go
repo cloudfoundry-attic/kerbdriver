@@ -72,6 +72,19 @@ var _ = Describe("Nfs Driver", func() {
 		})
 	})
 
+	Context("kerberos auth fails", func() {
+		It("panics", func() {
+			fakeKerberizer.LoginReturns(fmt.Errorf("some error occured"))
+			defer func() {
+				if r := recover(); r != nil {
+					return
+				}
+			}()
+			nfsDriver = nfsdriver.NewNfsDriver(logger, fakeOs, fakeFilepath, fakeIoutil, fakeExec, mountDir, fakeMounter, fakeKerberizer)
+			Fail("Never panic'ed")
+		})
+	})
+
 	Context("created", func() {
 		BeforeEach(func() {
 			nfsDriver = nfsdriver.NewNfsDriver(logger, fakeOs, fakeFilepath, fakeIoutil, fakeExec, mountDir, fakeMounter, fakeKerberizer)

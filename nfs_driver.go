@@ -67,7 +67,11 @@ func NewNfsDriver(logger lager.Logger, os osshim.Os, filepath filepathshim.Filep
 
 	d.restoreState(env)
 	d.checkMounts(env)
-	_ = d.kerberizer.Login()
+	err := d.kerberizer.Login(logger)
+	if err != nil {
+		logger.Error("kerberos login fails", err)
+		panic("kerberos login fails")
+	}
 
 	return d
 }
