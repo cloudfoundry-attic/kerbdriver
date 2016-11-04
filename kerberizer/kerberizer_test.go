@@ -1,18 +1,18 @@
-package nfsdriver_test
+package kerberizer_test
 
 import (
 	"errors"
 
 	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/lds-cf/nfsdriver"
+	"github.com/lds-cf/ldsdriver/kerberizer"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("kerberizer", func() {
 	var (
-		subject    nfsdriver.Kerberizer
+		subject    kerberizer.Kerberizer
 		testLogger = lagertest.NewTestLogger("kerberizer")
 		fakeExec   *exec_fake.FakeExec
 		fakeCmd    *exec_fake.FakeCmd
@@ -27,7 +27,7 @@ var _ = Describe("kerberizer", func() {
 		fakeExec = &exec_fake.FakeExec{}
 
 		fakeExec.CommandReturns(fakeCmd)
-		subject = nfsdriver.NewKerberizer(principal, keytab, fakeExec)
+		subject = kerberizer.NewKerberizer(principal, keytab, fakeExec)
 	})
 
 	Context("keytab valid", func() {

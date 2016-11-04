@@ -1,11 +1,11 @@
-package nfsdriver
+package kerberizer
 
 import (
 	"code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o nfsdriverfakes/fake_kerberizer.go . Kerberizer
+//go:generate counterfeiter -o ../ldsdriverfakes/fake_kerberizer.go . Kerberizer
 type Kerberizer interface {
 	Login(lager.Logger) error
 }

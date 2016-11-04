@@ -1,4 +1,4 @@
-package nfsdriver_test
+package kerberizer_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -9,5 +9,5 @@ import (
 
 func TestNfsDriver(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "NfsDriver Suite")
+	RunSpecs(t, "KerberizedDriver Suite")
 }

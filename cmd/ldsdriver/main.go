@@ -15,9 +15,10 @@ import (
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/nfsdriver"
 	"code.cloudfoundry.org/voldriver"
 	"code.cloudfoundry.org/voldriver/driverhttp"
-	"github.com/lds-cf/nfsdriver"
+	"github.com/lds-cf/ldsdriver/kerberizer"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -118,7 +119,8 @@ func main() {
 
 	exec := &execshim.ExecShim{}
 
-	kerberizer := nfsdriver.NewKerberizer(*principal, *keytab, exec)
+	kerberizer := kerberizer.NewKerberizer(*principal, *keytab, exec)
+	kerberizer.Login(logger)
 
 	client := nfsdriver.NewNfsDriver(
 		logger,
@@ -128,7 +130,6 @@ func main() {
 		exec,
 		*mountDir,
 		nfsdriver.NewNfsMounter(&execshim.ExecShim{}),
-		kerberizer,
 	)
 
 	if *transport == "tcp" {
