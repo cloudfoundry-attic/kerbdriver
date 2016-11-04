@@ -11,16 +11,16 @@ type Kerberizer interface {
 }
 
 type kerberizer struct {
-	principal, credential string
+	principal, keytab string
 
 	exec execshim.Exec
 }
 
-func NewKerberizer(principal, credential string, exec execshim.Exec) Kerberizer {
-	return &kerberizer{principal: principal, credential: credential, exec: exec}
+func NewKerberizer(principal, keytab string, exec execshim.Exec) Kerberizer {
+	return &kerberizer{principal: principal, keytab: keytab, exec: exec}
 }
 
 func (k *kerberizer) Login(_ lager.Logger) error {
-	cmd := k.exec.Command("kinit", "-k", "-t", k.credential, k.principal)
+	cmd := k.exec.Command("kinit", "-k", "-t", k.keytab, k.principal)
 	return cmd.Run()
 }

@@ -20,31 +20,29 @@ var _ = Describe("kerberizer", func() {
 		err error
 	)
 	const principal = "testPrincipal"
-	const credential = "testCredential"
+	const keytab = "/path/to/some.keytab"
 
 	BeforeEach(func() {
 		fakeCmd = &exec_fake.FakeCmd{}
 		fakeExec = &exec_fake.FakeExec{}
 
 		fakeExec.CommandReturns(fakeCmd)
-		subject = nfsdriver.NewKerberizer(principal, credential, fakeExec)
+		subject = nfsdriver.NewKerberizer(principal, keytab, fakeExec)
 	})
 
-	Context("credentials valid", func() {
+	Context("keytab valid", func() {
 		BeforeEach(func() {
 			err = subject.Login(testLogger)
-
 		})
 
 		It("should be able to login", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
-	Context("credentials invalid", func() {
+	Context("keytab invalid", func() {
 		BeforeEach(func() {
 			fakeCmd.RunReturns(errors.New("badness"))
 			err = subject.Login(testLogger)
-
 		})
 
 		It("should NOT be able to login", func() {

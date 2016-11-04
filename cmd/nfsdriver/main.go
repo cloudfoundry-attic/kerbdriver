@@ -92,13 +92,13 @@ var clientKeyFile = flag.String(
 var principal = flag.String(
 	"kerberosPrincipal",
 	"",
-	"the principal belonging to the Cloud Foundry service account",
+	"the Kerberos principal for the Cloud Foundry service account",
 )
 
-var credential = flag.String(
-	"kerberosCredential",
+var keytab = flag.String(
+	"keytab",
 	"",
-	"the secret belonging to the Cloud Foundry service account",
+	"the keytab file containing encrypted secret for the kerberosPrincipal",
 )
 
 var insecureSkipVerify = flag.Bool(
@@ -118,7 +118,7 @@ func main() {
 
 	exec := &execshim.ExecShim{}
 
-	kerberizer := nfsdriver.NewKerberizer(*principal, *credential, exec)
+	kerberizer := nfsdriver.NewKerberizer(*principal, *keytab, exec)
 
 	client := nfsdriver.NewNfsDriver(
 		logger,
