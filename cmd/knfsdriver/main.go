@@ -18,7 +18,7 @@ import (
 	"code.cloudfoundry.org/nfsdriver"
 	"code.cloudfoundry.org/voldriver"
 	"code.cloudfoundry.org/voldriver/driverhttp"
-	"github.com/lds-cf/ldsdriver/kerberizer"
+	"github.com/lds-cf/knfsdriver/kerberizer"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -174,9 +174,9 @@ func processRunnerFor(servers grouper.Members) ifrit.Runner {
 
 func createNfsDriverServer(logger lager.Logger, client *nfsdriver.NfsDriver, atAddress, driversPath string, jsonSpec bool, nfsToolsAddress string) ifrit.Runner {
 	advertisedUrl := "http://" + atAddress
-	logger.Info("writing-spec-file", lager.Data{"location": driversPath, "name": "nfsdriver", "address": advertisedUrl})
+	logger.Info("writing-spec-file", lager.Data{"location": driversPath, "name": "knfsdriver", "address": advertisedUrl})
 	if jsonSpec {
-		driverJsonSpec := voldriver.DriverSpec{Name: "nfsdriver", Address: advertisedUrl}
+		driverJsonSpec := voldriver.DriverSpec{Name: "knfsdriver", Address: advertisedUrl}
 
 		if *requireSSL {
 			absCaFile, err := filepath.Abs(*caFile)
@@ -192,10 +192,10 @@ func createNfsDriverServer(logger lager.Logger, client *nfsdriver.NfsDriver, atA
 		jsonBytes, err := json.Marshal(driverJsonSpec)
 
 		exitOnFailure(logger, err)
-		err = voldriver.WriteDriverSpec(logger, driversPath, "nfsdriver", "json", jsonBytes)
+		err = voldriver.WriteDriverSpec(logger, driversPath, "knfsdriver", "json", jsonBytes)
 		exitOnFailure(logger, err)
 	} else {
-		err := voldriver.WriteDriverSpec(logger, driversPath, "nfsdriver", "spec", []byte(advertisedUrl))
+		err := voldriver.WriteDriverSpec(logger, driversPath, "knfsdriver", "spec", []byte(advertisedUrl))
 		exitOnFailure(logger, err)
 	}
 

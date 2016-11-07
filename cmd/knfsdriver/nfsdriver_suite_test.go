@@ -17,7 +17,7 @@ var driverPath string
 
 var _ = BeforeSuite(func() {
 	var err error
-	driverPath, err = Build("github.com/lds-cf/ldsdriver/cmd/ldsdriver")
+	driverPath, err = Build("github.com/lds-cf/knfsdriver/cmd/knfsdriver")
 	Expect(err).ToNot(HaveOccurred())
 })
 

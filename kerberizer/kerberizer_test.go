@@ -5,7 +5,7 @@ import (
 
 	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/lds-cf/ldsdriver/kerberizer"
+	"github.com/lds-cf/knfsdriver/kerberizer"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -48,5 +48,12 @@ var _ = Describe("kerberizer", func() {
 		It("should NOT be able to login", func() {
 			Expect(err).To(HaveOccurred())
 		})
+	})
+
+	Context("user-supplied credential valid for RO share", func() {
+		BeforeEach(func() {
+			//
+		})
+
 	})
 })

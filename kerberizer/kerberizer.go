@@ -5,7 +5,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../ldsdriverfakes/fake_kerberizer.go . Kerberizer
+//go:generate counterfeiter -o ../knfsdriverfakes/fake_kerberizer.go . Kerberizer
 type Kerberizer interface {
 	Login(lager.Logger) error
 }
