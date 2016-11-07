@@ -1,2 +1,2 @@
-# nfsdriver
-Volman driver supporting NFS
+# knfsdriver
+Volman driver supporting Kerberized NFS
