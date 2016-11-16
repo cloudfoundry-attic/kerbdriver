@@ -60,6 +60,7 @@ var _ = Describe("Runas", func() {
 
 	})
 
+	// TODO: this ends up exercising CommandContextAsUser without actually exercising context concerns. Does that matter?
 	Context("#CommandAsUser", func() {
 		AfterEach(func() {
 			err = runas.DeleteUser(logger, subject, fakeExec)

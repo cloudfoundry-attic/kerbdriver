@@ -9,10 +9,12 @@ import (
 )
 
 type FakeKerberizer struct {
-	LoginStub        func(lager.Logger) error
+	LoginStub        func(lager.Logger, string, string) error
 	loginMutex       sync.RWMutex
 	loginArgsForCall []struct {
 		arg1 lager.Logger
+		arg2 string
+		arg3 string
 	}
 	loginReturns struct {
 		result1 error
@@ -21,15 +23,17 @@ type FakeKerberizer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeKerberizer) Login(arg1 lager.Logger) error {
+func (fake *FakeKerberizer) Login(arg1 lager.Logger, arg2 string, arg3 string) error {
 	fake.loginMutex.Lock()
 	fake.loginArgsForCall = append(fake.loginArgsForCall, struct {
 		arg1 lager.Logger
-	}{arg1})
-	fake.recordInvocation("Login", []interface{}{arg1})
+		arg2 string
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Login", []interface{}{arg1, arg2, arg3})
 	fake.loginMutex.Unlock()
 	if fake.LoginStub != nil {
-		return fake.LoginStub(arg1)
+		return fake.LoginStub(arg1, arg2, arg3)
 	} else {
 		return fake.loginReturns.result1
 	}
@@ -41,10 +45,10 @@ func (fake *FakeKerberizer) LoginCallCount() int {
 	return len(fake.loginArgsForCall)
 }
 
-func (fake *FakeKerberizer) LoginArgsForCall(i int) lager.Logger {
+func (fake *FakeKerberizer) LoginArgsForCall(i int) (lager.Logger, string, string) {
 	fake.loginMutex.RLock()
 	defer fake.loginMutex.RUnlock()
-	return fake.loginArgsForCall[i].arg1
+	return fake.loginArgsForCall[i].arg1, fake.loginArgsForCall[i].arg2, fake.loginArgsForCall[i].arg3
 }
 
 func (fake *FakeKerberizer) LoginReturns(result1 error) {

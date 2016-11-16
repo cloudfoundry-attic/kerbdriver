@@ -119,8 +119,8 @@ func main() {
 
 	exec := &execshim.ExecShim{}
 
-	kerberizer := kerberizer.NewKerberizer(*principal, *keytab, exec)
-	kerberizer.Login(logger)
+	kerberizer := kerberizer.NewKerberizer(exec)
+	kerberizer.Login(logger, *principal, *keytab)
 
 	client := nfsdriver.NewNfsDriver(
 		logger,

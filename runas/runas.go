@@ -1,6 +1,7 @@
 package runas
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	osuser "os/user"
@@ -87,6 +88,11 @@ func DeleteUser(logger lager.Logger, u User, exec execshim.Exec) error {
 }
 
 func CommandAsUser(logger lager.Logger, u User, exec execshim.Exec, name string, args ...string) (execshim.Cmd, error) {
+	return CommandContextAsUser(context.TODO(), logger, u, exec, name, args...)
+}
+
+// TODO: the context support here isn't really... does it matter?
+func CommandContextAsUser(ctx context.Context, logger lager.Logger, u User, exec execshim.Exec, name string, args ...string) (execshim.Cmd, error) {
 	cmd := exec.Command(name, args...)
 	sysProcAttr := cmd.SysProcAttr()
 

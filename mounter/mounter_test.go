@@ -3,10 +3,10 @@ package mounter_test
 import (
 	"errors"
 
-	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"context"
+	"github.com/lds-cf/goshims/execshim/exec_fake"
 	"github.com/lds-cf/knfsdriver/mounter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -35,7 +35,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 		subject = mounter.NewNfsMounter(fakeExec)
 	})
 
-	Context("#Mount", func() {
+	FContext("#Mount", func() {
 		var (
 			output []byte
 
@@ -52,13 +52,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 				output, err = subject.Mount(testContext, "source", "target", "my-fs", ptr, "my-mount-options")
 			})
 
-			FIt("should return without error", func() {
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeExec.CommandContextCallCount()).To(Equal(4))
-			})
-
-			It("should use the passed in variables", func() {
+			It("should mount using the passed in variables", func() {
 				_, cmd, args := fakeExec.CommandContextArgsForCall(0)
 				Expect(cmd).To(Equal("mount"))
 				Expect(args[0]).To(Equal("-t"))
@@ -68,6 +62,31 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 				Expect(args[4]).To(Equal("source"))
 				Expect(args[5]).To(Equal("target"))
 			})
+
+			It("should authorize using the credentials coming from the broker", func() {})
+
+			Context("when authorization succeeds", func() {
+				BeforeEach(func() {
+					//fakeAuthorizer.isAuthorizedReturns(true)
+				})
+
+				It("should leave the volume mounted", func() {})
+			})
+
+			Context("when authorization fails", func() {
+				BeforeEach(func() {
+					//fakeAuthorizer.isAuthorizedReturns(false)
+				})
+
+				It("should not leave the volume mounted", func() {})
+			})
+
+			It("should return without error", func() {
+				Expect(err).NotTo(HaveOccurred())
+
+				//				Expect(fakeExec.CommandContextCallCount()).To(Equal(4))
+			})
+
 		})
 
 		Context("when mount errors", func() {
@@ -82,7 +101,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 				output, err = subject.Mount(testContext, "source", "target", "my-fs", ptr, "my-mount-options")
 			})
 
-			It("should return without error", func() {
+			It("should return with error", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})

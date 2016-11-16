@@ -7,20 +7,18 @@ import (
 
 //go:generate counterfeiter -o ../knfsdriverfakes/fake_kerberizer.go . Kerberizer
 type Kerberizer interface {
-	Login(lager.Logger) error
+	Login(lager.Logger, string, string) error
 }
 
 type kerberizer struct {
-	principal, keytab string
-
 	exec execshim.Exec
 }
 
-func NewKerberizer(principal, keytab string, exec execshim.Exec) Kerberizer {
-	return &kerberizer{principal: principal, keytab: keytab, exec: exec}
+func NewKerberizer(exec execshim.Exec) Kerberizer {
+	return &kerberizer{exec: exec}
 }
 
-func (k *kerberizer) Login(_ lager.Logger) error {
-	cmd := k.exec.Command("kinit", "-k", "-t", k.keytab, k.principal)
+func (k *kerberizer) Login(_ lager.Logger, principal, keytab string) error {
+	cmd := k.exec.Command("kinit", "-k", "-t", keytab, principal)
 	return cmd.Run()
 }

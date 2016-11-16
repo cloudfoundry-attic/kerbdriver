@@ -19,41 +19,38 @@ var _ = Describe("kerberizer", func() {
 
 		err error
 	)
+
 	const principal = "testPrincipal"
 	const keytab = "/path/to/some.keytab"
 
 	BeforeEach(func() {
 		fakeCmd = &exec_fake.FakeCmd{}
 		fakeExec = &exec_fake.FakeExec{}
-
 		fakeExec.CommandReturns(fakeCmd)
-		subject = kerberizer.NewKerberizer(principal, keytab, fakeExec)
+
+		subject = kerberizer.NewKerberizer(fakeExec)
 	})
 
-	Context("keytab valid", func() {
-		BeforeEach(func() {
-			err = subject.Login(testLogger)
+	Context("#Login", func() {
+		JustBeforeEach(func() {
+			err = subject.Login(testLogger, principal, keytab)
 		})
 
-		It("should be able to login", func() {
-			Expect(err).NotTo(HaveOccurred())
+		Context("keytab valid for principal", func() {
+			It("should be able to login", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("keytab invalid for principal", func() {
+			BeforeEach(func() {
+				fakeCmd.RunReturns(errors.New("badness"))
+			})
+
+			It("should NOT be able to login", func() {
+				Expect(err).To(HaveOccurred())
+			})
 		})
 	})
-	Context("keytab invalid", func() {
-		BeforeEach(func() {
-			fakeCmd.RunReturns(errors.New("badness"))
-			err = subject.Login(testLogger)
-		})
 
-		It("should NOT be able to login", func() {
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
-	Context("user-supplied credential valid for RO share", func() {
-		BeforeEach(func() {
-			//
-		})
-
-	})
 })
