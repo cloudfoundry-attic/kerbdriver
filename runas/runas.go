@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"syscall"
 
-	"code.cloudfoundry.org/goshims/execshim"
-	"code.cloudfoundry.org/goshims/usershim"
 	"code.cloudfoundry.org/lager"
+	"github.com/lds-cf/goshims/execshim"
+	"github.com/lds-cf/goshims/usershim"
 )
 
 type usr struct {
