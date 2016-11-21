@@ -2,11 +2,14 @@ package mounter_test
 
 import (
 	"errors"
+	"fmt"
+
+	"context"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"context"
 	"github.com/lds-cf/goshims/execshim/exec_fake"
+	"github.com/lds-cf/knfsdriver/knfsdriverfakes"
 	"github.com/lds-cf/knfsdriver/mounter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,6 +22,8 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 		err    error
 
 		fakeExec *exec_fake.FakeExec
+		//fakeKerb1      *knfsdriverfakes.FakeKerberizer
+		fakeAuthorizer *knfsdriverfakes.FakeAuthorizer
 
 		subject mounter.Mounter
 
@@ -31,12 +36,14 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 		testContext = context.TODO()
 
 		fakeExec = &exec_fake.FakeExec{}
+		fakeAuthorizer = &knfsdriverfakes.FakeAuthorizer{}
 
-		subject = mounter.NewNfsMounter(fakeExec)
+		subject = mounter.NewNfsMounterWithAuthorizer(fakeAuthorizer, fakeExec)
 	})
 
 	FContext("#Mount", func() {
 		var (
+			ptr    uintptr
 			output []byte
 
 			fakeCmd *exec_fake.FakeCmd
@@ -44,17 +51,20 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 
 		Context("when mount succeeds", func() {
 			BeforeEach(func() {
-				var ptr uintptr
 
 				fakeCmd = &exec_fake.FakeCmd{}
 				fakeExec.CommandContextReturns(fakeCmd)
 
-				output, err = subject.Mount(testContext, "source", "target", "my-fs", ptr, "my-mount-options")
+				// TODO test both the READONLY and the READWRITE case
+			})
+
+			JustBeforeEach(func() {
+				output, err = subject.Mount(logger, testContext, "source", "target", "my-fs", ptr, mounter.READONLY, "my-mount-options", "principal", "keytab")
 			})
 
 			It("should mount using the passed in variables", func() {
 				_, cmd, args := fakeExec.CommandContextArgsForCall(0)
-				Expect(cmd).To(Equal("mount"))
+				Expect(cmd).To(Equal("/bin/mount"))
 				Expect(args[0]).To(Equal("-t"))
 				Expect(args[1]).To(Equal("my-fs"))
 				Expect(args[2]).To(Equal("-o"))
@@ -63,28 +73,36 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 				Expect(args[5]).To(Equal("target"))
 			})
 
-			It("should authorize using the credentials coming from the broker", func() {})
+			It("should authorize the mount", func() {
+				Expect(fakeAuthorizer.AuthorizeCallCount()).To(Equal(1))
+			})
 
 			Context("when authorization succeeds", func() {
 				BeforeEach(func() {
-					//fakeAuthorizer.isAuthorizedReturns(true)
+					fakeAuthorizer.AuthorizeReturns(nil)
 				})
 
-				It("should leave the volume mounted", func() {})
+				It("should leave the volume mounted", func() {
+					// no additional command should have been issued in this case
+					Expect(fakeExec.CommandContextCallCount()).To(Equal(1))
+				})
 			})
 
 			Context("when authorization fails", func() {
 				BeforeEach(func() {
-					//fakeAuthorizer.isAuthorizedReturns(false)
+					fakeAuthorizer.AuthorizeReturns(fmt.Errorf("mock unauthorized"))
 				})
 
-				It("should not leave the volume mounted", func() {})
+				It("should not leave the volume mounted", func() {
+					// it should be the previous count + 1
+					Expect(fakeExec.CommandContextCallCount()).To(Equal(2))
+					_, cmd, _ := fakeExec.CommandContextArgsForCall(1)
+					Expect(cmd).To(Equal("/bin/umount"))
+				})
 			})
 
 			It("should return without error", func() {
 				Expect(err).NotTo(HaveOccurred())
-
-				//				Expect(fakeExec.CommandContextCallCount()).To(Equal(4))
 			})
 
 		})
@@ -98,16 +116,12 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 
 				fakeCmd.CombinedOutputReturns(nil, errors.New("badness"))
 
-				output, err = subject.Mount(testContext, "source", "target", "my-fs", ptr, "my-mount-options")
+				output, err = subject.Mount(logger, testContext, "source", "target", "my-fs", ptr, mounter.READONLY, "options", "principal", "keytab")
 			})
 
 			It("should return with error", func() {
 				Expect(err).To(HaveOccurred())
 			})
-		})
-
-		Context("when mount is cancelled", func() {
-			// TODO: when we pick up the lager.Context
 		})
 	})
 
@@ -116,14 +130,11 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 			fakeCmd *exec_fake.FakeCmd
 		)
 
-		Context("when mount succeeds", func() {
+		JustBeforeEach(func() {
+			err = subject.Unmount(logger, testContext, "target", 0)
+		})
 
-			BeforeEach(func() {
-				fakeCmd = &exec_fake.FakeCmd{}
-				fakeExec.CommandContextReturns(fakeCmd)
-
-				err = subject.Unmount(testContext, "target", 0)
-			})
+		Context("when unmount succeeds", func() {
 
 			It("should return without error", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -143,7 +154,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 
 				fakeCmd.RunReturns(errors.New("badness"))
 
-				err = subject.Unmount(testContext, "target", 0)
+				err = subject.Unmount(logger, testContext, "target", 0)
 			})
 
 			It("should return an error", func() {

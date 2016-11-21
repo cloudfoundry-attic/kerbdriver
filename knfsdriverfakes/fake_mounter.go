@@ -5,27 +5,33 @@ import (
 	"context"
 	"sync"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/lds-cf/knfsdriver/mounter"
 )
 
 type FakeMounter struct {
-	MountStub        func(ctx context.Context, source string, target string, fstype string, flags uintptr, data string) ([]byte, error)
+	MountStub        func(logger lager.Logger, ctx context.Context, source string, target string, fstype string, flags uintptr, mountMode int, mountOptions, principal, keytab string) ([]byte, error)
 	mountMutex       sync.RWMutex
 	mountArgsForCall []struct {
-		ctx    context.Context
-		source string
-		target string
-		fstype string
-		flags  uintptr
-		data   string
+		logger       lager.Logger
+		ctx          context.Context
+		source       string
+		target       string
+		fstype       string
+		flags        uintptr
+		mountMode    int
+		mountOptions string
+		principal    string
+		keytab       string
 	}
 	mountReturns struct {
 		result1 []byte
 		result2 error
 	}
-	UnmountStub        func(ctx context.Context, target string, flags int) (err error)
+	UnmountStub        func(logger lager.Logger, ctx context.Context, target string, flags int) (err error)
 	unmountMutex       sync.RWMutex
 	unmountArgsForCall []struct {
+		logger lager.Logger
 		ctx    context.Context
 		target string
 		flags  int
@@ -37,20 +43,24 @@ type FakeMounter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeMounter) Mount(ctx context.Context, source string, target string, fstype string, flags uintptr, data string) ([]byte, error) {
+func (fake *FakeMounter) Mount(logger lager.Logger, ctx context.Context, source string, target string, fstype string, flags uintptr, mountMode int, mountOptions string, principal string, keytab string) ([]byte, error) {
 	fake.mountMutex.Lock()
 	fake.mountArgsForCall = append(fake.mountArgsForCall, struct {
-		ctx    context.Context
-		source string
-		target string
-		fstype string
-		flags  uintptr
-		data   string
-	}{ctx, source, target, fstype, flags, data})
-	fake.recordInvocation("Mount", []interface{}{ctx, source, target, fstype, flags, data})
+		logger       lager.Logger
+		ctx          context.Context
+		source       string
+		target       string
+		fstype       string
+		flags        uintptr
+		mountMode    int
+		mountOptions string
+		principal    string
+		keytab       string
+	}{logger, ctx, source, target, fstype, flags, mountMode, mountOptions, principal, keytab})
+	fake.recordInvocation("Mount", []interface{}{logger, ctx, source, target, fstype, flags, mountMode, mountOptions, principal, keytab})
 	fake.mountMutex.Unlock()
 	if fake.MountStub != nil {
-		return fake.MountStub(ctx, source, target, fstype, flags, data)
+		return fake.MountStub(logger, ctx, source, target, fstype, flags, mountMode, mountOptions, principal, keytab)
 	} else {
 		return fake.mountReturns.result1, fake.mountReturns.result2
 	}
@@ -62,10 +72,10 @@ func (fake *FakeMounter) MountCallCount() int {
 	return len(fake.mountArgsForCall)
 }
 
-func (fake *FakeMounter) MountArgsForCall(i int) (context.Context, string, string, string, uintptr, string) {
+func (fake *FakeMounter) MountArgsForCall(i int) (lager.Logger, context.Context, string, string, string, uintptr, int, string, string, string) {
 	fake.mountMutex.RLock()
 	defer fake.mountMutex.RUnlock()
-	return fake.mountArgsForCall[i].ctx, fake.mountArgsForCall[i].source, fake.mountArgsForCall[i].target, fake.mountArgsForCall[i].fstype, fake.mountArgsForCall[i].flags, fake.mountArgsForCall[i].data
+	return fake.mountArgsForCall[i].logger, fake.mountArgsForCall[i].ctx, fake.mountArgsForCall[i].source, fake.mountArgsForCall[i].target, fake.mountArgsForCall[i].fstype, fake.mountArgsForCall[i].flags, fake.mountArgsForCall[i].mountMode, fake.mountArgsForCall[i].mountOptions, fake.mountArgsForCall[i].principal, fake.mountArgsForCall[i].keytab
 }
 
 func (fake *FakeMounter) MountReturns(result1 []byte, result2 error) {
@@ -76,17 +86,18 @@ func (fake *FakeMounter) MountReturns(result1 []byte, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeMounter) Unmount(ctx context.Context, target string, flags int) (err error) {
+func (fake *FakeMounter) Unmount(logger lager.Logger, ctx context.Context, target string, flags int) (err error) {
 	fake.unmountMutex.Lock()
 	fake.unmountArgsForCall = append(fake.unmountArgsForCall, struct {
+		logger lager.Logger
 		ctx    context.Context
 		target string
 		flags  int
-	}{ctx, target, flags})
-	fake.recordInvocation("Unmount", []interface{}{ctx, target, flags})
+	}{logger, ctx, target, flags})
+	fake.recordInvocation("Unmount", []interface{}{logger, ctx, target, flags})
 	fake.unmountMutex.Unlock()
 	if fake.UnmountStub != nil {
-		return fake.UnmountStub(ctx, target, flags)
+		return fake.UnmountStub(logger, ctx, target, flags)
 	} else {
 		return fake.unmountReturns.result1
 	}
@@ -98,10 +109,10 @@ func (fake *FakeMounter) UnmountCallCount() int {
 	return len(fake.unmountArgsForCall)
 }
 
-func (fake *FakeMounter) UnmountArgsForCall(i int) (context.Context, string, int) {
+func (fake *FakeMounter) UnmountArgsForCall(i int) (lager.Logger, context.Context, string, int) {
 	fake.unmountMutex.RLock()
 	defer fake.unmountMutex.RUnlock()
-	return fake.unmountArgsForCall[i].ctx, fake.unmountArgsForCall[i].target, fake.unmountArgsForCall[i].flags
+	return fake.unmountArgsForCall[i].logger, fake.unmountArgsForCall[i].ctx, fake.unmountArgsForCall[i].target, fake.unmountArgsForCall[i].flags
 }
 
 func (fake *FakeMounter) UnmountReturns(result1 error) {
