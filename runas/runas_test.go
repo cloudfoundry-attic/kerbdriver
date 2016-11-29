@@ -25,8 +25,6 @@ var _ = Describe("Runas", func() {
 		fakeUser *user_fake.FakeUser
 
 		subject runas.User
-
-		//testContext context.Context
 	)
 
 	BeforeEach(func() {
@@ -60,29 +58,20 @@ var _ = Describe("Runas", func() {
 
 	})
 
-	// TODO: this ends up exercising CommandContextAsUser without actually exercising context concerns. Does that matter?
-	Context("#CommandAsUser", func() {
-		AfterEach(func() {
-			err = runas.DeleteUser(logger, subject, fakeExec)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
+	Context("#NewWrappedExecForUser", func() {
 		It("should be able to run a command as that user", func() {
-			fakeCmd = &exec_fake.FakeCmd{}
-			fakeExec.CommandReturns(fakeCmd)
 			fakeSpa := &syscall.SysProcAttr{}
 			fakeCmd.SysProcAttrReturns(fakeSpa)
 
-			runasCmd, err := runas.CommandAsUser(logger, subject, fakeExec, "id", "-F")
+			wrapped, err := subject.Exec(logger, fakeExec)
+			cmd := wrapped.Command("/usr/bin/id", "-F")
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeSpa.Credential.Uid).To(Equal(uint32(9876)))
 			Expect(fakeSpa.Credential.Gid).To(Equal(uint32(9876)))
 
-			runasCmd.Run()
-			// possibly some expectations on the output of the `id` command that we just ran?
+			cmd.Run()
 		})
-
 	})
 
 	Context("#DeleteUser", func() {

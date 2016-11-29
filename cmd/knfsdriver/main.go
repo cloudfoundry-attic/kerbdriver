@@ -10,7 +10,7 @@ import (
 	cf_lager "code.cloudfoundry.org/cflager"
 	cf_debug_server "code.cloudfoundry.org/debugserver"
 
-	"code.cloudfoundry.org/goshims/execshim"
+	orig_exec "code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/goshims/filepathshim"
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
@@ -18,7 +18,11 @@ import (
 	"code.cloudfoundry.org/nfsdriver"
 	"code.cloudfoundry.org/voldriver"
 	"code.cloudfoundry.org/voldriver/driverhttp"
+	"github.com/lds-cf/goshims/execshim"
+	"github.com/lds-cf/goshims/usershim"
+	"github.com/lds-cf/knfsdriver/authorizer"
 	"github.com/lds-cf/knfsdriver/kerberizer"
+	"github.com/lds-cf/knfsdriver/mounter"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -117,19 +121,19 @@ func main() {
 	logger.Info("start")
 	defer logger.Info("end")
 
-	exec := &execshim.ExecShim{}
-
-	kerberizer := kerberizer.NewKerberizer(exec)
+	kerberizer := kerberizer.NewKerberizer(&execshim.ExecShim{})
 	kerberizer.Login(logger, *principal, *keytab)
+
+	authorizer := authorizer.NewAuthorizer(kerberizer, &execshim.ExecShim{}, &usershim.UserShim{})
 
 	client := nfsdriver.NewNfsDriver(
 		logger,
 		&osshim.OsShim{},
 		&filepathshim.FilepathShim{},
 		&ioutilshim.IoutilShim{},
-		exec,
+		&orig_exec.ExecShim{},
 		*mountDir,
-		nfsdriver.NewNfsMounter(&execshim.ExecShim{}),
+		mounter.NewNfsMounter(authorizer, &execshim.ExecShim{}),
 	)
 
 	if *transport == "tcp" {

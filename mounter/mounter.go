@@ -2,24 +2,13 @@ package mounter
 
 import (
 	"context"
-	"os"
+	"fmt"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/nfsdriver"
 
 	"github.com/lds-cf/goshims/execshim"
 	"github.com/lds-cf/knfsdriver/authorizer"
-	"github.com/lds-cf/knfsdriver/kerberizer"
-)
-
-//go:generate counterfeiter -o ../knfsdriverfakes/fake_mounter.go . Mounter
-type Mounter interface {
-	Mount(logger lager.Logger, ctx context.Context, source string, target string, fstype string, flags uintptr, mountMode int, mountOptions, principal, keytab string) ([]byte, error)
-	Unmount(logger lager.Logger, ctx context.Context, target string, flags int) (err error)
-}
-
-const (
-	READONLY  int = os.O_RDONLY
-	READWRITE int = os.O_RDWR
 )
 
 type nfsMounter struct {
@@ -27,43 +16,45 @@ type nfsMounter struct {
 	authorizer authorizer.Authorizer
 }
 
-func NewNfsMounter(exec execshim.Exec) Mounter {
-	kerber := kerberizer.NewKerberizer(exec)
-	author := authorizer.NewAuthorizer(kerber, exec)
-
-	return NewNfsMounterWithAuthorizer(author, exec)
-}
-
-func NewNfsMounterWithAuthorizer(author authorizer.Authorizer, exec execshim.Exec) Mounter {
+func NewNfsMounter(author authorizer.Authorizer, exec execshim.Exec) nfsdriver.Mounter {
 	m := &nfsMounter{exec: exec, authorizer: author}
 	return m
 }
 
-func (m *nfsMounter) Mount(logger lager.Logger, ctx context.Context, source string, target string, fstype string, flags uintptr, mountMode int, mountOptions, principal, keytab string) ([]byte, error) {
-	logger = logger.Session("mount")
+const (
+	FSType       string = "nfsv4"
+	MountOptions        = "vers=4.0,rsize=1048576,wsize=1048576,hard,intr,timeo=600,retrans=2,actimeo=0"
+)
+
+func (m *nfsMounter) Mount(logger lager.Logger, ctx context.Context, source string, target string, opts map[string]interface{}) error {
+	logger = logger.Session("Mounter")
 	defer logger.Info("end")
 
-	cmd := m.exec.CommandContext(ctx, "/bin/mount", "-t", fstype, "-o", mountOptions, source, target)
+	// TODO these will come from an Opts
+	mountMode := authorizer.ReadOnly
+	principal := "someServicePrincipal"
+	keytab := "/tmp/someService.keytab"
+	cmd := m.exec.CommandContext(ctx, "/bin/mount", "-t", FSType, "-o", MountOptions, source, target)
 
-	saveOutput, err := cmd.CombinedOutput()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		logger.Error("failed to mount", err)
-		return nil, err
+		logger.Error("knfs-mount-failed", err, lager.Data{"err": output})
+		return fmt.Errorf("%s:(%s)", output, err.Error())
 	}
 
 	err = m.authorizer.Authorize(logger, target, mountMode, principal, keytab)
 	if err != nil {
 		logger.Error("failed to authorize", err)
-		anotherErr := m.Unmount(logger, ctx, target, 0)
+		anotherErr := m.Unmount(logger, ctx, target)
 		if anotherErr != nil {
 			logger.Error("Unmount failed while trying to clean up.", anotherErr)
 		}
-		return nil, err
+		return err
 	}
-	return saveOutput, nil
+	return nil
 }
 
-func (m *nfsMounter) Unmount(logger lager.Logger, ctx context.Context, target string, flags int) (err error) {
+func (m *nfsMounter) Unmount(logger lager.Logger, ctx context.Context, target string) (err error) {
 	cmd := m.exec.CommandContext(ctx, "/bin/umount", target)
 	return cmd.Run()
 }

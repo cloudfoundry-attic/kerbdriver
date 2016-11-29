@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/lds-cf/goshims/execshim"
 	"github.com/lds-cf/knfsdriver/kerberizer"
 )
 
@@ -17,6 +18,17 @@ type FakeKerberizer struct {
 		arg3 string
 	}
 	loginReturns struct {
+		result1 error
+	}
+	LoginWithExecStub        func(lager.Logger, execshim.Exec, string, string) error
+	loginWithExecMutex       sync.RWMutex
+	loginWithExecArgsForCall []struct {
+		arg1 lager.Logger
+		arg2 execshim.Exec
+		arg3 string
+		arg4 string
+	}
+	loginWithExecReturns struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -58,11 +70,49 @@ func (fake *FakeKerberizer) LoginReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeKerberizer) LoginWithExec(arg1 lager.Logger, arg2 execshim.Exec, arg3 string, arg4 string) error {
+	fake.loginWithExecMutex.Lock()
+	fake.loginWithExecArgsForCall = append(fake.loginWithExecArgsForCall, struct {
+		arg1 lager.Logger
+		arg2 execshim.Exec
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("LoginWithExec", []interface{}{arg1, arg2, arg3, arg4})
+	fake.loginWithExecMutex.Unlock()
+	if fake.LoginWithExecStub != nil {
+		return fake.LoginWithExecStub(arg1, arg2, arg3, arg4)
+	} else {
+		return fake.loginWithExecReturns.result1
+	}
+}
+
+func (fake *FakeKerberizer) LoginWithExecCallCount() int {
+	fake.loginWithExecMutex.RLock()
+	defer fake.loginWithExecMutex.RUnlock()
+	return len(fake.loginWithExecArgsForCall)
+}
+
+func (fake *FakeKerberizer) LoginWithExecArgsForCall(i int) (lager.Logger, execshim.Exec, string, string) {
+	fake.loginWithExecMutex.RLock()
+	defer fake.loginWithExecMutex.RUnlock()
+	return fake.loginWithExecArgsForCall[i].arg1, fake.loginWithExecArgsForCall[i].arg2, fake.loginWithExecArgsForCall[i].arg3, fake.loginWithExecArgsForCall[i].arg4
+}
+
+func (fake *FakeKerberizer) LoginWithExecReturns(result1 error) {
+	fake.LoginWithExecStub = nil
+	fake.loginWithExecReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeKerberizer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.loginMutex.RLock()
 	defer fake.loginMutex.RUnlock()
+	fake.loginWithExecMutex.RLock()
+	defer fake.loginWithExecMutex.RUnlock()
 	return fake.invocations
 }
 

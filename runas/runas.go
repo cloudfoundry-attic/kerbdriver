@@ -1,3 +1,9 @@
+// +build linux, darwin
+
+// Windows and Plan9 use non-numeric uid, gid.
+// The strategy for this implementation is to set the numeric uid,gid onto a syscall.SysProcContext,
+// which itself is posix-specific
+
 package runas
 
 import (
@@ -23,6 +29,7 @@ type User interface {
 	Username() string
 	Name() string
 	HomeDir() string
+	Exec(lager.Logger, execshim.Exec) (execshim.Exec, error)
 }
 
 func (u usr) Uid() string {
@@ -45,6 +52,10 @@ func (u usr) HomeDir() string {
 	return u.User.HomeDir
 }
 
+func (u usr) Exec(logger lager.Logger, exec execshim.Exec) (execshim.Exec, error) {
+	return newWrappedExecForUser(logger, u, exec)
+}
+
 func randomUsername(length int) string {
 	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
 
@@ -57,7 +68,7 @@ func randomUsername(length int) string {
 }
 
 func CreateRandomUser(logger lager.Logger, exec execshim.Exec, user usershim.User) (User, error) {
-	// likely to fail unless called by a process owned by a privileged user account
+	// likely to fail unless called in a process that is owned by a privileged user account
 	newUsername := randomUsername(8)
 	cmd := exec.Command("useradd", newUsername)
 	err := cmd.Run()
@@ -87,27 +98,45 @@ func DeleteUser(logger lager.Logger, u User, exec execshim.Exec) error {
 	return nil
 }
 
-func CommandAsUser(logger lager.Logger, u User, exec execshim.Exec, name string, args ...string) (execshim.Cmd, error) {
-	return CommandContextAsUser(context.TODO(), logger, u, exec, name, args...)
+type wrappedExec struct {
+	logger   lager.Logger
+	exec     execshim.Exec
+	user     User
+	uid, gid uint32
 }
 
-// TODO: the context support here isn't really... does it matter?
-func CommandContextAsUser(ctx context.Context, logger lager.Logger, u User, exec execshim.Exec, name string, args ...string) (execshim.Cmd, error) {
-	cmd := exec.Command(name, args...)
-	sysProcAttr := cmd.SysProcAttr()
+func (w *wrappedExec) Command(name string, arg ...string) execshim.Cmd {
+	cmd := w.exec.Command(name, arg...)
 
-	uid, err := strconv.ParseUint(u.Uid(), 10, 32)
+	sysProcAttr := cmd.SysProcAttr()
+	sysProcAttr.Credential = &syscall.Credential{Uid: w.uid, Gid: w.gid}
+
+	return cmd
+}
+
+func (w *wrappedExec) CommandContext(ctx context.Context, name string, arg ...string) execshim.Cmd {
+	cmd := w.exec.CommandContext(ctx, name, arg...)
+
+	sysProcAttr := cmd.SysProcAttr()
+	sysProcAttr.Credential = &syscall.Credential{Uid: w.uid, Gid: w.gid}
+
+	return cmd
+}
+
+func (w *wrappedExec) LookPath(file string) (string, error) {
+	return w.exec.LookPath(file)
+}
+
+func newWrappedExecForUser(logger lager.Logger, u User, exec execshim.Exec) (execshim.Exec, error) {
+	uid, err := strconv.ParseInt(u.Uid(), 10, 32)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse uid as integer: %v", err)
 	}
 
-	gid, err := strconv.ParseUint(u.Gid(), 10, 32)
+	gid, err := strconv.ParseInt(u.Gid(), 10, 32)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse gid as integer: %v", err)
 	}
 
-	logger.Info(fmt.Sprintf("sysprocattr=%#v", sysProcAttr))
-
-	sysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)}
-	return cmd, nil
+	return &wrappedExec{logger: logger, exec: exec, user: u, uid: uint32(uid), gid: uint32(gid)}, nil
 }
