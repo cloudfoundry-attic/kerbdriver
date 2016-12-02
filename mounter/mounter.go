@@ -2,22 +2,26 @@ package mounter
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"os"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsdriver"
 
 	"github.com/lds-cf/goshims/execshim"
+	"github.com/lds-cf/goshims/ioutilshim"
 	"github.com/lds-cf/knfsdriver/authorizer"
 )
 
 type nfsMounter struct {
 	exec       execshim.Exec
 	authorizer authorizer.Authorizer
+	ioutil     ioutilshim.Ioutil
 }
 
-func NewNfsMounter(author authorizer.Authorizer, exec execshim.Exec) nfsdriver.Mounter {
-	m := &nfsMounter{exec: exec, authorizer: author}
+func NewNfsMounter(author authorizer.Authorizer, exec execshim.Exec, ioutil ioutilshim.Ioutil) nfsdriver.Mounter {
+	m := &nfsMounter{exec: exec, authorizer: author, ioutil: ioutil}
 	return m
 }
 
@@ -30,10 +34,6 @@ func (m *nfsMounter) Mount(logger lager.Logger, ctx context.Context, source stri
 	logger = logger.Session("Mounter")
 	defer logger.Info("end")
 
-	// TODO these will come from an Opts
-	mountMode := authorizer.ReadOnly
-	principal := "someServicePrincipal"
-	keytab := "/tmp/someService.keytab"
 	cmd := m.exec.CommandContext(ctx, "/bin/mount", "-t", FSType, "-o", MountOptions, source, target)
 
 	output, err := cmd.CombinedOutput()
@@ -42,7 +42,24 @@ func (m *nfsMounter) Mount(logger lager.Logger, ctx context.Context, source stri
 		return fmt.Errorf("%s:(%s)", output, err.Error())
 	}
 
-	err = m.authorizer.Authorize(logger, target, mountMode, principal, keytab)
+	mountMode := opts["mode"].(authorizer.MountMode)
+	principal := opts["kerberosPrincipal"].(string)
+	keytabContents, err := base64.StdEncoding.DecodeString(opts["kerberosKeytab"].(string)) // base64-encoded keytab file contents from broker
+	if err != nil {
+		return fmt.Errorf("kerberosKeytab is not properly-encoded base64 data", err)
+	}
+
+	tempFile, err := m.ioutil.TempFile("/tmp", "auth.")
+	if err != nil {
+		return fmt.Errorf("failed to create a keytab file", err)
+	}
+
+	err = m.ioutil.WriteFile(tempFile.Name(), keytabContents, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to write a keytab file", err)
+	}
+
+	err = m.authorizer.Authorize(logger, target, mountMode, principal, tempFile.Name())
 	if err != nil {
 		logger.Error("failed to authorize", err)
 		anotherErr := m.Unmount(logger, ctx, target)

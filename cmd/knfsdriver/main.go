@@ -133,7 +133,7 @@ func main() {
 		&ioutilshim.IoutilShim{},
 		&orig_exec.ExecShim{},
 		*mountDir,
-		mounter.NewNfsMounter(authorizer, &execshim.ExecShim{}),
+		mounter.NewNfsMounter(authorizer, &execshim.ExecShim{}, &ioutilshim.IoutilShim{}),
 	)
 
 	if *transport == "tcp" {
