@@ -4,8 +4,8 @@ package knfsdriverfakes
 import (
 	"sync"
 
+	"code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/lager"
-	"github.com/lds-cf/goshims/execshim"
 	"github.com/lds-cf/knfsdriver/kerberizer"
 )
 

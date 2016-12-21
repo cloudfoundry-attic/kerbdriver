@@ -5,10 +5,10 @@ import (
 	"os/user"
 	"syscall"
 
+	"code.cloudfoundry.org/goshims/execshim/exec_fake"
+	"code.cloudfoundry.org/goshims/usershim/user_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/lds-cf/goshims/execshim/exec_fake"
-	"github.com/lds-cf/goshims/usershim/user_fake"
 	"github.com/lds-cf/knfsdriver/authorizer"
 	//"github.com/lds-cf/knfsdriver/kerberizer"
 	"github.com/lds-cf/knfsdriver/knfsdriverfakes"

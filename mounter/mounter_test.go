@@ -8,10 +8,10 @@ import (
 
 	"context"
 
+	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/nfsdriver"
-	"github.com/lds-cf/goshims/execshim/exec_fake"
 	"github.com/lds-cf/goshims/ioutilshim/ioutil_fake"
 	"github.com/lds-cf/knfsdriver/authorizer"
 	"github.com/lds-cf/knfsdriver/knfsdriverfakes"
@@ -19,6 +19,19 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+type env struct {
+	l lager.Logger
+	c context.Context
+}
+
+func (e *env) Logger() lager.Logger {
+	return e.l
+}
+
+func (e *env) Context() context.Context {
+	return e.c
+}
 
 var _ = Describe("Kerberized NFS Mounter", func() {
 
@@ -72,7 +85,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 		Context("when mount succeeds", func() {
 
 			JustBeforeEach(func() {
-				err = subject.Mount(logger, testContext, "source", "target", opts)
+				err = subject.Mount(&env{logger, testContext}, "source", "target", opts)
 			})
 
 			Context("when the keytab is created successfully", func() {
@@ -202,7 +215,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 
 				fakeCmd.CombinedOutputReturns(nil, errors.New("badness"))
 
-				err = subject.Mount(logger, testContext, "source", "target", opts)
+				err = subject.Mount(&env{logger, testContext}, "source", "target", opts)
 			})
 
 			It("should return with error", func() {
@@ -222,7 +235,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 				fakeExec.CommandContextReturns(fakeCmd)
 				fakeAuthorizer.AuthorizeReturns(errors.New("badness"))
 
-				err = subject.Mount(logger, testContext, "source", "target", opts)
+				err = subject.Mount(&env{logger, testContext}, "source", "target", opts)
 			})
 			It("should return with error", func() {
 				Expect(err).To(HaveOccurred())
@@ -242,7 +255,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 		)
 
 		JustBeforeEach(func() {
-			err = subject.Unmount(logger, testContext, "target")
+			err = subject.Unmount(&env{logger, testContext}, "target")
 		})
 
 		Context("when unmount succeeds", func() {
@@ -265,7 +278,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 
 				fakeCmd.RunReturns(errors.New("badness"))
 
-				err = subject.Unmount(logger, testContext, "target")
+				err = subject.Unmount(&env{logger, testContext}, "target")
 			})
 
 			It("should return an error", func() {

@@ -1,16 +1,16 @@
 package mounter
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"os"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsdriver"
+	"code.cloudfoundry.org/voldriver"
 
-	"github.com/lds-cf/goshims/execshim"
-	"github.com/lds-cf/goshims/ioutilshim"
+	"code.cloudfoundry.org/goshims/execshim"
+	"code.cloudfoundry.org/goshims/ioutilshim"
 	"github.com/lds-cf/knfsdriver/authorizer"
 )
 
@@ -30,11 +30,11 @@ const (
 	MountOptions        = "vers=4.0,rsize=1048576,wsize=1048576,hard,intr,timeo=600,retrans=2,actimeo=0"
 )
 
-func (m *nfsMounter) Mount(logger lager.Logger, ctx context.Context, source string, target string, opts map[string]interface{}) error {
-	logger = logger.Session("Mounter")
+func (m *nfsMounter) Mount(env voldriver.Env, source string, target string, opts map[string]interface{}) error {
+	logger := env.Logger().Session("Mounter")
 	defer logger.Info("end")
 
-	cmd := m.exec.CommandContext(ctx, "/bin/mount", "-t", FSType, "-o", MountOptions, source, target)
+	cmd := m.exec.CommandContext(env.Context(), "/bin/mount", "-t", FSType, "-o", MountOptions, source, target)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -62,7 +62,7 @@ func (m *nfsMounter) Mount(logger lager.Logger, ctx context.Context, source stri
 	err = m.authorizer.Authorize(logger, target, mountMode, principal, tempFile.Name())
 	if err != nil {
 		logger.Error("failed to authorize", err)
-		anotherErr := m.Unmount(logger, ctx, target)
+		anotherErr := m.Unmount(env, target)
 		if anotherErr != nil {
 			logger.Error("Unmount failed while trying to clean up.", anotherErr)
 		}
@@ -71,7 +71,11 @@ func (m *nfsMounter) Mount(logger lager.Logger, ctx context.Context, source stri
 	return nil
 }
 
-func (m *nfsMounter) Unmount(logger lager.Logger, ctx context.Context, target string) (err error) {
-	cmd := m.exec.CommandContext(ctx, "/bin/umount", target)
+func (m *nfsMounter) Unmount(env voldriver.Env, target string) (err error) {
+	cmd := m.exec.CommandContext(env.Context(), "/bin/umount", target)
 	return cmd.Run()
+}
+
+func (m *nfsMounter) Check(env voldriver.Env, name, mountPoint string) bool {
+	panic("not implemented")
 }

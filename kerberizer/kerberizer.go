@@ -1,8 +1,8 @@
 package kerberizer
 
 import (
+	"code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/lager"
-	"github.com/lds-cf/goshims/execshim"
 )
 
 //go:generate counterfeiter -o ../knfsdriverfakes/fake_kerberizer.go . Kerberizer

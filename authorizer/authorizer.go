@@ -5,8 +5,8 @@ import (
 	"path"
 	"time"
 
-	"github.com/lds-cf/goshims/execshim"
-	"github.com/lds-cf/goshims/usershim"
+	"code.cloudfoundry.org/goshims/execshim"
+	"code.cloudfoundry.org/goshims/usershim"
 	"github.com/lds-cf/knfsdriver/kerberizer"
 	"github.com/lds-cf/knfsdriver/runas"
 

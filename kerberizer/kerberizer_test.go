@@ -3,8 +3,8 @@ package kerberizer_test
 import (
 	"errors"
 
+	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/lds-cf/goshims/execshim/exec_fake"
 	"github.com/lds-cf/knfsdriver/kerberizer"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

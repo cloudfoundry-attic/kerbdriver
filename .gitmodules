@@ -1,0 +1,3 @@
+[submodule "vendor/code.cloudfoundry.org/goshims"]
+	path = vendor/code.cloudfoundry.org/goshims
+	url = https://github.com/lds-cf/goshims

@@ -10,16 +10,15 @@ import (
 	cf_lager "code.cloudfoundry.org/cflager"
 	cf_debug_server "code.cloudfoundry.org/debugserver"
 
-	orig_exec "code.cloudfoundry.org/goshims/execshim"
+	"code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/goshims/filepathshim"
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/goshims/osshim"
+	"code.cloudfoundry.org/goshims/usershim"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/nfsdriver"
 	"code.cloudfoundry.org/voldriver"
 	"code.cloudfoundry.org/voldriver/driverhttp"
-	"github.com/lds-cf/goshims/execshim"
-	"github.com/lds-cf/goshims/usershim"
 	"github.com/lds-cf/knfsdriver/authorizer"
 	"github.com/lds-cf/knfsdriver/kerberizer"
 	"github.com/lds-cf/knfsdriver/mounter"
@@ -131,7 +130,6 @@ func main() {
 		&osshim.OsShim{},
 		&filepathshim.FilepathShim{},
 		&ioutilshim.IoutilShim{},
-		&orig_exec.ExecShim{},
 		*mountDir,
 		mounter.NewNfsMounter(authorizer, &execshim.ExecShim{}, &ioutilshim.IoutilShim{}),
 	)
