@@ -9,9 +9,9 @@ import (
 	"code.cloudfoundry.org/goshims/usershim/user_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/lds-cf/knfsdriver/authorizer"
+	"code.cloudfoundry.org/kerbdriver/authorizer"
 	//"github.com/lds-cf/knfsdriver/kerberizer"
-	"github.com/lds-cf/knfsdriver/knfsdriverfakes"
+	"code.cloudfoundry.org/kerbdriver/kerbdriverfakes"
 	//	"github.com/lds-cf/knfsdriver/runas"
 
 	. "github.com/onsi/ginkgo"

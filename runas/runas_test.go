@@ -8,7 +8,7 @@ import (
 	"code.cloudfoundry.org/goshims/usershim/user_fake"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/lds-cf/knfsdriver/runas"
+	"code.cloudfoundry.org/kerbdriver/runas"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

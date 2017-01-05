@@ -5,7 +5,7 @@ import (
 
 	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/lds-cf/knfsdriver/kerberizer"
+	"code.cloudfoundry.org/kerbdriver/kerberizer"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

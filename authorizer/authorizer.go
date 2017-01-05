@@ -7,8 +7,8 @@ import (
 
 	"code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/goshims/usershim"
-	"github.com/lds-cf/knfsdriver/kerberizer"
-	"github.com/lds-cf/knfsdriver/runas"
+	"code.cloudfoundry.org/kerbdriver/kerberizer"
+	"code.cloudfoundry.org/kerbdriver/runas"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -26,7 +26,7 @@ const (
 	ReadWrite
 )
 
-//go:generate counterfeiter -o ../knfsdriverfakes/fake_authorizer.go . Authorizer
+//go:generate counterfeiter -o ../kerbdriverfakes/fake_authorizer.go . Authorizer
 type Authorizer interface {
 	Authorize(logger lager.Logger, mountpath string, mountmode MountMode, principal, keytab string) error
 }

@@ -11,7 +11,7 @@ import (
 
 	"code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/goshims/ioutilshim"
-	"github.com/lds-cf/knfsdriver/authorizer"
+	"code.cloudfoundry.org/kerbdriver/authorizer"
 )
 
 type nfsMounter struct {

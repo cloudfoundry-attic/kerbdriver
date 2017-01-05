@@ -6,7 +6,7 @@ import (
 
 	"code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/lager"
-	"github.com/lds-cf/knfsdriver/kerberizer"
+	"code.cloudfoundry.org/kerbdriver/kerberizer"
 )
 
 type FakeKerberizer struct {

@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/lds-cf/knfsdriver/authorizer"
+	"code.cloudfoundry.org/kerbdriver/authorizer"
 )
 
 type FakeAuthorizer struct {

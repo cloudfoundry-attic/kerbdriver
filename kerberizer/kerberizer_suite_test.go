@@ -9,5 +9,5 @@ import (
 
 func TestNfsDriver(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "KerberizedDriver Suite")
+	RunSpecs(t, "Kerberizer Suite")
 }

@@ -10,14 +10,14 @@ import (
 
 func TestNfsdriver(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Ldsdriver Suite")
+	RunSpecs(t, "Kerbdriver Suite")
 }
 
 var driverPath string
 
 var _ = BeforeSuite(func() {
 	var err error
-	driverPath, err = Build("github.com/lds-cf/knfsdriver/cmd/knfsdriver")
+	driverPath, err = Build("code.cloudfoundry.org/kerbdriver/cmd/kerbdriver")
 	Expect(err).ToNot(HaveOccurred())
 })
 
