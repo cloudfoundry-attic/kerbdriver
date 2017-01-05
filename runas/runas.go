@@ -1,4 +1,4 @@
-// +build linux, darwin
+// +build linux darwin
 
 // Windows and Plan9 use non-numeric uid, gid.
 // The strategy for this implementation is to set the numeric uid,gid onto a syscall.SysProcContext,
