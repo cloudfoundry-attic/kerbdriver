@@ -77,5 +77,6 @@ func (m *nfsMounter) Unmount(env voldriver.Env, target string) (err error) {
 }
 
 func (m *nfsMounter) Check(env voldriver.Env, name, mountPoint string) bool {
-	panic("not implemented")
+	// TODO: implement proper mount checks
+	return true;
 }
