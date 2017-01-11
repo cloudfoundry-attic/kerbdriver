@@ -26,7 +26,7 @@ func NewNfsMounter(author authorizer.Authorizer, exec execshim.Exec, ioutil iout
 }
 
 const (
-	FSType       string = "nfsv4"
+	FSType       string = "nfs4"
 	MountOptions        = "vers=4.0,rsize=1048576,wsize=1048576,hard,intr,timeo=600,retrans=2,actimeo=0"
 )
 
