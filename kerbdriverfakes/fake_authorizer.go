@@ -4,8 +4,8 @@ package knfsdriverfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/kerbdriver/authorizer"
+	"code.cloudfoundry.org/lager"
 )
 
 type FakeAuthorizer struct {

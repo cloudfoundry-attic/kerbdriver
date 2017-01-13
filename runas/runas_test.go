@@ -6,9 +6,9 @@ import (
 
 	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/goshims/usershim/user_fake"
+	"code.cloudfoundry.org/kerbdriver/runas"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/kerbdriver/runas"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

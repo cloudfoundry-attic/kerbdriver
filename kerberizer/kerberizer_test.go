@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/goshims/execshim/exec_fake"
-	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/kerbdriver/kerberizer"
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

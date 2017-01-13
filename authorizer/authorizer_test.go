@@ -7,9 +7,9 @@ import (
 
 	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/goshims/usershim/user_fake"
+	"code.cloudfoundry.org/kerbdriver/authorizer"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/kerbdriver/authorizer"
 	//"github.com/lds-cf/knfsdriver/kerberizer"
 	"code.cloudfoundry.org/kerbdriver/kerbdriverfakes"
 	//	"github.com/lds-cf/knfsdriver/runas"

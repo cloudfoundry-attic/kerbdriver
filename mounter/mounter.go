@@ -44,7 +44,18 @@ func (m *nfsMounter) Mount(env voldriver.Env, source string, target string, opts
 
 	logger.Debug("mount was successful")
 
-	mountMode := opts["mode"].(authorizer.MountMode)
+	var mountMode authorizer.MountMode
+
+	switch opts["mode"] {
+	case 0:
+		mountMode = authorizer.ReadOnly
+	case 1:
+		mountMode = authorizer.ReadWrite
+	default:
+		logger.Info("bad-mount-mode-defaulting-to-ro", lager.Data{"mode": opts["mode"]})
+		mountMode = authorizer.ReadOnly
+	}
+
 	principal := opts["kerberosPrincipal"].(string)
 	keytabContents, err := base64.StdEncoding.DecodeString(opts["kerberosKeytab"].(string)) // base64-encoded keytab file contents from broker
 	if err != nil {
@@ -82,5 +93,5 @@ func (m *nfsMounter) Unmount(env voldriver.Env, target string) (err error) {
 
 func (m *nfsMounter) Check(env voldriver.Env, name, mountPoint string) bool {
 	// TODO: implement proper mount checks
-	return true;
+	return true
 }

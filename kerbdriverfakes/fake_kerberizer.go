@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/goshims/execshim"
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/kerbdriver/kerberizer"
+	"code.cloudfoundry.org/lager"
 )
 
 type FakeKerberizer struct {
