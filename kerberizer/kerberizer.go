@@ -26,6 +26,6 @@ func (k *kerberizer) Login(logger lager.Logger, principal, keytab string) error 
 
 func (k *kerberizer) LoginWithExec(logger lager.Logger, exec execshim.Exec, principal, keytab string) error {
 	logger.Debug(fmt.Sprintf("trying `kinit -k -r %q %q", keytab, principal))
-	cmd := exec.Command("kinit", "-k", "-t", keytab, principal)
+	cmd := exec.Command("/usr/bin/kinit", "-k", "-t", keytab, principal)
 	return cmd.Run()
 }
