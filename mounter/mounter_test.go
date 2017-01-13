@@ -10,7 +10,6 @@ import (
 
 	"code.cloudfoundry.org/goshims/execshim/exec_fake"
 	"code.cloudfoundry.org/goshims/ioutilshim/ioutil_fake"
-	"code.cloudfoundry.org/kerbdriver/authorizer"
 	"code.cloudfoundry.org/kerbdriver/kerbdriverfakes"
 	"code.cloudfoundry.org/kerbdriver/mounter"
 	"code.cloudfoundry.org/lager"
@@ -18,6 +17,7 @@ import (
 	"code.cloudfoundry.org/nfsdriver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"code.cloudfoundry.org/kerbdriver/authorizer"
 )
 
 type env struct {
@@ -76,7 +76,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 			fakeCmd = &exec_fake.FakeCmd{}
 			fakeExec.CommandContextReturns(fakeCmd)
 			opts = map[string]interface{}{
-				"mode":              authorizer.ReadOnly,
+				"mode":              "r",
 				"kerberosPrincipal": "someKerberosGuy",
 				"kerberosKeytab":    "dGhpcyBpcyB0aGUgbWVzc2FnZQ==", // "this is the message"
 			}
@@ -128,7 +128,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 
 					_, tgt, mmode, principal, keytab := fakeAuthorizer.AuthorizeArgsForCall(0)
 					Expect(tgt).To(Equal("target"))
-					Expect(mmode).To(Equal(opts["mode"]))
+					Expect(mmode).To(Equal(authorizer.ReadOnly))
 					Expect(principal).To(Equal(opts["kerberosPrincipal"]))
 					Expect(keytab).To(Equal(tempFile.Name()))
 				})
