@@ -42,6 +42,8 @@ func (m *nfsMounter) Mount(env voldriver.Env, source string, target string, opts
 		return fmt.Errorf("%s:(%s)", output, err.Error())
 	}
 
+	logger.Debug("mount was successful")
+
 	mountMode := opts["mode"].(authorizer.MountMode)
 	principal := opts["kerberosPrincipal"].(string)
 	keytabContents, err := base64.StdEncoding.DecodeString(opts["kerberosKeytab"].(string)) // base64-encoded keytab file contents from broker
@@ -68,6 +70,8 @@ func (m *nfsMounter) Mount(env voldriver.Env, source string, target string, opts
 		}
 		return err
 	}
+
+	logger.Debug(fmt.Sprintf("successfully mounted and authorized for principal %q", principal))
 	return nil
 }
 

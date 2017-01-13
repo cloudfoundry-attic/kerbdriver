@@ -121,7 +121,10 @@ func main() {
 	defer logger.Info("end")
 
 	kerberizer := kerberizer.NewKerberizer(&execshim.ExecShim{})
-	kerberizer.Login(logger, *principal, *keytab)
+	err := kerberizer.Login(logger, *principal, *keytab)
+	if err != nil {
+		logger.Error("kerberizer.Login failed", err)	// maybe prudent to simply fail starting the server here...?
+	}
 
 	authorizer := authorizer.NewAuthorizer(kerberizer, &execshim.ExecShim{}, &usershim.UserShim{})
 
