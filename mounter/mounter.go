@@ -46,10 +46,10 @@ func (m *nfsMounter) Mount(env voldriver.Env, source string, target string, opts
 
 	var mountMode authorizer.MountMode
 
-	switch opts["mode"] {
-	case 0:
+	switch opts["mode"].(string) {
+	case "r":
 		mountMode = authorizer.ReadOnly
-	case 1:
+	case "rw":
 		mountMode = authorizer.ReadWrite
 	default:
 		logger.Info("bad-mount-mode-defaulting-to-ro", lager.Data{"mode": opts["mode"]})
