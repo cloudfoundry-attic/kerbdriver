@@ -48,17 +48,25 @@ func (a *authorizer) Authorize(logger lager.Logger, mountpath string, mountmode 
 		logger.Error("WARN: failed to delete temporary user", err, lager.Data{"user": u.Username()})
 	}()
 
+	logger.Debug("created-random-named-user-account", lager.Data{"user": u.Username()})
+
 	// as that user, kinit
 	wrappedExec, err := u.Exec(logger, a.exec)
 	if err != nil {
 		// TODO: wrap it to add contextual?
+		logger.Error("failed-to-create-an-execshim-wrapper", err)
 		return err
 	}
 
+	logger.Debug("created-wrapped-exec-for-sudu-as-user", lager.Data{"user": u.Username()})
+
 	err = a.kerberizer.LoginWithExec(logger, wrappedExec, principal, keytab)
 	if err != nil {
+		logger.Error("failed-to-authenticate-user", err, lager.Data{"principal": principal, "user": u.Username()})
 		return err
 	}
+
+	logger.Debug("successfully-did-kinit-as-principal", lager.Data{"principal": principal, "user": u.Username()})
 
 	// as that user, either touch or ls to figure out access level
 	switch mountmode {
@@ -69,6 +77,8 @@ func (a *authorizer) Authorize(logger lager.Logger, mountpath string, mountmode 
 			logger.Error("access denied", err)
 			return err
 		}
+
+		logger.Debug("principal-is-allowed-ls", lager.Data{"principal": principal, "path": mountpath})
 	case ReadWrite:
 		filename := path.Join(mountpath, fmt.Sprintf("%s.authorizer", time.Now().UnixNano()))
 		cmd := wrappedExec.Command("touch", filename)
@@ -79,14 +89,13 @@ func (a *authorizer) Authorize(logger lager.Logger, mountpath string, mountmode 
 			return err
 		}
 
+		logger.Debug("principal-is-allowed-touch", lager.Data{"principal": principal, "path": mountpath})
+
 		cmd = wrappedExec.Command("rm", filename)
 		_, err = cmd.CombinedOutput()
 		if err != nil {
 			logger.Error(fmt.Sprintf("failed to clean up file %q", filename), err)
 		}
-
-		return nil
-
 	}
 
 	return nil

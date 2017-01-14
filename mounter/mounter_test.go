@@ -18,6 +18,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"code.cloudfoundry.org/kerbdriver/authorizer"
+	"code.cloudfoundry.org/goshims/osshim/os_fake"
 )
 
 type env struct {
@@ -42,6 +43,7 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 		fakeExec   *exec_fake.FakeExec
 		fakeCmd    *exec_fake.FakeCmd
 		fakeIoutil *ioutil_fake.FakeIoutil
+		fakeOs *os_fake.FakeOs
 		tempFile   *os.File
 		//fakeKerb1      *knfsdriverfakes.FakeKerberizer
 		fakeAuthorizer *knfsdriverfakes.FakeAuthorizer
@@ -61,8 +63,9 @@ var _ = Describe("Kerberized NFS Mounter", func() {
 		fakeExec.CommandContextReturns(fakeCmd)
 		fakeAuthorizer = &knfsdriverfakes.FakeAuthorizer{}
 		fakeIoutil = &ioutil_fake.FakeIoutil{}
+		fakeOs = &os_fake.FakeOs{}
 
-		subject = mounter.NewNfsMounter(fakeAuthorizer, fakeExec, fakeIoutil)
+		subject = mounter.NewNfsMounter(fakeAuthorizer, fakeExec, fakeIoutil, fakeOs)
 	})
 
 	Context("#Mount", func() {

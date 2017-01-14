@@ -12,16 +12,18 @@ import (
 	"code.cloudfoundry.org/goshims/execshim"
 	"code.cloudfoundry.org/goshims/ioutilshim"
 	"code.cloudfoundry.org/kerbdriver/authorizer"
+	"code.cloudfoundry.org/goshims/osshim"
 )
 
 type nfsMounter struct {
 	exec       execshim.Exec
 	authorizer authorizer.Authorizer
 	ioutil     ioutilshim.Ioutil
+	os osshim.Os
 }
 
-func NewNfsMounter(author authorizer.Authorizer, exec execshim.Exec, ioutil ioutilshim.Ioutil) nfsdriver.Mounter {
-	m := &nfsMounter{exec: exec, authorizer: author, ioutil: ioutil}
+func NewNfsMounter(author authorizer.Authorizer, exec execshim.Exec, ioutil ioutilshim.Ioutil, os osshim.Os) nfsdriver.Mounter {
+	m := &nfsMounter{exec: exec, authorizer: author, ioutil: ioutil, os: os}
 	return m
 }
 
@@ -70,6 +72,11 @@ func (m *nfsMounter) Mount(env voldriver.Env, source string, target string, opts
 	err = m.ioutil.WriteFile(tempFile.Name(), keytabContents, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("failed to write a keytab file", err)
+	}
+
+	err = m.os.Chmod(tempFile.Name(), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to set keytab file permissions", err)
 	}
 
 	err = m.authorizer.Authorize(logger, target, mountMode, principal, tempFile.Name())
