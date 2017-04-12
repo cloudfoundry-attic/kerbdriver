@@ -102,3 +102,7 @@ func (m *nfsMounter) Check(env voldriver.Env, name, mountPoint string) bool {
 	// TODO: implement proper mount checks
 	return true
 }
+
+func (m *nfsMounter) Purge(_ voldriver.Env, _ string) {
+	// this is a no-op for now
+}
